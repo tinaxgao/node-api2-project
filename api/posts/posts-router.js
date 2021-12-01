@@ -61,23 +61,62 @@ router.post("/", (req, res) => {
 });
 
 router.put("/:id", (req, res) => {
-  res.json("foo");
+  const { title, contents } = req.body;
+  if (!title || !contents) {
+    res
+      .status(400)
+      .json({ message: "Please provide title and contents for the post" });
+  } else {
+    Posts.findById(req.params.id)
+      .then((stuff) => {
+        if (!stuff) {
+          res
+            .status(404)
+            .json({ message: "The post with the specified ID does not exist" });
+        } else {
+          return Posts.update(req.params.id, req.body);
+        }
+      })
+      .then((data) => {
+        if (data) {
+          return Posts.findById(req.params.id);
+        }
+      })
+      .then((post) => {
+        if (post) {
+          res.json(post);
+        } else {
+          res.status(500).json({
+            message: "The post information could not be modified",
+          });
+        }
+      })
+      .catch((err) => {
+        res.status(500).json({
+          message: "The posts information could not be retrieved",
+          err: err.message,
+          stack: err.stack,
+        });
+      });
+  }
 });
 
 router.delete("/:id", async (req, res) => {
   try {
-    const post = await Posts.findById(req.params.id)
+    const post = await Posts.findById(req.params.id);
     if (!post) {
-        res.status(404).json({message: "The post with the specified ID does not exist"})
+      res
+        .status(404)
+        .json({ message: "The post with the specified ID does not exist" });
     } else {
-        await Posts.remove(req.params.id)
-        res.json(post) //returns the deleted post object
+      await Posts.remove(req.params.id);
+      res.json(post); //returns the deleted post object
     }
-  }
-  catch (err) {
+  } catch (err) {
     res.status(500).json({
-        message: "The post could not be removed",
-  })}
+      message: "The post could not be removed",
+    });
+  }
 });
 
 router.get("/:id/comments", (req, res) => {
