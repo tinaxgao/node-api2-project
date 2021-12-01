@@ -9,13 +9,11 @@ router.get("/", (req, res) => {
       res.json(found);
     })
     .catch((err) => {
-      res
-        .status(500)
-        .json({
-          message: "The posts information could not be retrieved",
-          err: err.message,
-          stack: err.stack,
-        });
+      res.status(500).json({
+        message: "The posts information could not be retrieved",
+        err: err.message,
+        stack: err.stack,
+      });
     });
 });
 
@@ -31,18 +29,35 @@ router.get("/:id", (req, res) => {
       }
     })
     .catch((err) => {
-      res
-        .status(500)
-        .json({
-          message: "The posts information could not be retrieved",
-          err: err.message,
-          stack: err.stack,
-        });
+      res.status(500).json({
+        message: "The posts information could not be retrieved",
+        err: err.message,
+        stack: err.stack,
+      });
     });
 });
 
 router.post("/", (req, res) => {
-  res.json("foo");
+  const { title, contents } = req.body;
+  if (!title || !contents) {
+    res
+      .status(400)
+      .json({ message: "Please provide title and contents for the post" });
+  } else {
+    Posts.insert(req.body)
+      .then(({ id }) => {
+        return Posts.findById(id);
+      })
+      .then((post) => {
+        res.status(201).json(post);
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(500).json({
+          message: "There was an error while saving the post to the database",
+        });
+      });
+  }
 });
 
 router.put("/:id", (req, res) => {
